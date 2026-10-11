@@ -7,27 +7,41 @@ import (
 	"strings"
 
 	"github.com/kumarharsh13/notes-app/note"
+	"github.com/kumarharsh13/notes-app/todo"
 )
+
+type saver interface { // Normal Interface
+	Save() error
+}
+
+type outputable interface { // Embbeded Interface
+	saver
+	Display()
+}
 
 func main() {
 	title, content := getNoteData()
-
+	text := getUserInput("Todo Data: ")
 	userNote, err := note.New(title, content)
+	todoData, err := todo.New(text)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	userNote.Display()
-	err = userNote.Save()
+	todoData.Display()
+
+	err = saveData(todoData)
 
 	if err != nil {
-		fmt.Println("[Error] File saving failed")
+		fmt.Println(err)
 		return
 	}
 
-	fmt.Println("[Success] File saving successfully..!!!!")
+	err = outputData(todoData)
+	outputData(userNote)
+
 }
 
 func getNoteData() (string, string) {
@@ -51,4 +65,21 @@ func getUserInput(prompt string) string {
 	text = strings.TrimSuffix(text, "\r")
 
 	return text
+}
+
+func outputData(data outputable) error {
+	data.Display()
+	return saveData(data)
+}
+
+func saveData(data saver) error {
+	err := data.Save()
+
+	if err != nil {
+		fmt.Println("[Error] File saving failed")
+		return err
+	}
+
+	fmt.Println("[Success] File saving successfully..!!!!")
+	return nil
 }
